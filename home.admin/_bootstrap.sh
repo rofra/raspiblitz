@@ -135,7 +135,8 @@ fi
 if [ "${flagExists}" = "1" ]; then
   localip=$(hostname -I | awk '{print $1}')
   /home/admin/_cache.sh set state "stop"
-  /home/admin/_cache.sh set message "stopped for manual provision ${localip}"
+  /home/admin/_cache.sh set message "stopped for manual provision"
+  /home/admin/_cache.sh set internet_localip "${localip}"
   systemctl stop background.service
   systemctl stop background.scan.service
   # log info
@@ -149,6 +150,7 @@ if [ "${vm}" = "1"  ] && [ ${flagExists} -gt 0 ]; then
   localip=$(hostname -I | awk '{print $1}')
   /home/admin/_cache.sh set state "stop"
   /home/admin/_cache.sh set message "VM stopped for manual provision"
+  /home/admin/_cache.sh set internet_localip "${localip}"
   systemctl stop background.service
   systemctl stop background.scan.service
   # log info
