@@ -483,7 +483,7 @@ if [ "$action" = "status" ]; then
 
         echo "# PROPOSING LAYOUT ..."
 
-        # get a list of all connected drives >7GB ordered by size (biggest first)
+        # get a list of all connected drives >31GB ordered by size (biggest first)
         listOfDevices=$(lsblk -dno NAME,SIZE | grep -E "^(sd|nvme)" | \
         awk '{ 
         size=$2
@@ -494,7 +494,7 @@ if [ "$action" = "status" ]; then
         } else if(size ~ /M/) { 
         sub("M","",size); size=size/1024 
         }
-        if (size >= 7) printf "%s %.0f\n", $1, size
+        if (size >= 31) printf "%s %.0f\n", $1, size
         }' | sort -k2,2nr -k1,1 )
         echo "listOfDevices='${listOfDevices}'"
 
@@ -582,15 +582,15 @@ if [ "$action" = "status" ]; then
         fi
 
         # Set DATA (check last, because its more common to have STORAGE & DATA combined)
-        echo "# Selecting DATA device:"
-        echo "#  - so far dataDevice(${dataDevice}) / storageDevice(${storageDevice})"
+        #echo "# Selecting DATA device:"
+        #echo "#  - so far dataDevice(${dataDevice}) / storageDevice(${storageDevice})"
         if [ ${#dataDevice} -eq 0 ] || [ "${dataDevice}" = "${storageDevice}" ]; then
 
             # when no data device yet: take the second biggest drive as the data drive
             dataDevice=$(echo "${listOfDevices}" | head -n1 | awk '{print $1}')
             dataSizeGB=$(echo "${listOfDevices}" | head -n1 | awk '{print $2}')
             listOfDevices=$(echo "${listOfDevices}" | grep -v "${dataDevice}")
-            echo "#  - seleted dataDevice: ${dataDevice} (${dataSizeGB}GB)"
+            #echo "#  - seleted dataDevice: ${dataDevice} (${dataSizeGB}GB)"
 
             # ignore system device if choosen as data device
             if [ "${dataDevice}" = "${systemDevice}" ]; then
@@ -796,7 +796,7 @@ if [ "$action" = "status" ]; then
         dataMountedPath="${storageMountedPath}"
     fi
     
-    # echo "# Used Space"
+    #echo "# Used Space"
 
     # get used space on drives in GB
     storageUsePercent=""
@@ -814,7 +814,7 @@ if [ "$action" = "status" ]; then
         systemUsePercent=$(df "/dev/${systemPartition}" 2>/dev/null | awk 'NR==2 {sub(/%/, "", $5); print $5}')
     fi
 
-    # echo "# Free Space"
+    #echo "# Free Space"
 
     # get free space on drives
     if [ ${#storagePartition} -gt 0 ]; then
@@ -829,7 +829,7 @@ if [ "$action" = "status" ]; then
         systemFreeKB=$(df -k | grep "/dev/${systemPartition}" 2>/dev/null | awk '{print $4}' | tail -n 1)
     fi
 
-    # echo "# Temperature"
+    #echo "# Temperature"
 
     # get Temperature of drives
     if [ ${#storageDevice} -gt 0 ]; then
@@ -844,23 +844,23 @@ if [ "$action" = "status" ]; then
         systemCelsius=$(smartctl -A /dev/${systemDevice} 2>/dev/null | grep -E '^Temperature:|Temperature Sensor' | awk '{print $(NF-1)}' | head -n 1)
     fi
 
-    # echo "# Unused Space"
+    #echo "# Unused Space"
 
     # get unused space on drives
     storageUnusedPercent=0
     dataUnusedPercent=0
     systemUnusedPercent=0
     if [ ${#storageDevice} -gt 0 ]; then
-        storageUnusedPercent=$(parted /dev/${storageDevice} unit % print free 2>/dev/null | awk '/Free Space/ {v=$(NF-2); gsub(/[^0-9.]/, "", v)} END{print int(v)}')
+        storageUnusedPercent=$(parted -s /dev/${storageDevice} unit % print free 2>/dev/null | awk '/Free Space/ {v=$(NF-2); gsub(/[^0-9.]/, "", v)} END{print int(v)}')
     fi
     if [ ${#dataDevice} -gt 0 ]; then
-        dataUnusedPercent=$(parted /dev/${dataDevice} unit % print free 2>/dev/null | awk '/Free Space/ {v=$(NF-2); gsub(/[^0-9.]/, "", v)} END{print int(v)}')
+        dataUnusedPercent=$(parted -s /dev/${dataDevice} unit % print free 2>/dev/null | awk '/Free Space/ {v=$(NF-2); gsub(/[^0-9.]/, "", v)} END{print int(v)}')
     fi
     if [ ${#systemDevice} -gt 0 ]; then
-        systemUnusedPercent=$(parted /dev/${systemDevice} unit % print free 2>/dev/null | awk '/Free Space/ {v=$(NF-2); gsub(/[^0-9.]/, "", v)} END{print int(v)}')
+        systemUnusedPercent=$(parted -s /dev/${systemDevice} unit % print free 2>/dev/null | awk '/Free Space/ {v=$(NF-2); gsub(/[^0-9.]/, "", v)} END{print int(v)}')
     fi
 
-    # echo "# RESULTS"
+    #echo "# RESULTS"
 
     # output the result
     echo "scenario='${scenario}'"
