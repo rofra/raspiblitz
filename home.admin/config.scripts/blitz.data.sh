@@ -51,6 +51,9 @@ storageFullMinGB=890
 dataMinGB=32
 systemMinGB=32
 
+# swap file path
+swapFilePath="/swapfile"
+
 # check if started with sudo
 if [ "$EUID" -ne 0 ]; then 
   echo "error='run as root'"
@@ -78,7 +81,6 @@ fi
 if [ "$action" = "swap" ]; then
 
     swapAction=$2
-    swapFilePath="/swapfile"
     swapSizeGB=8
 
     if [ "$swapAction" = "on" ]; then
@@ -115,7 +117,7 @@ if [ "$action" = "swap" ]; then
             exit 1
         fi
         # make permanent
-        if ! grep -q "${swapFilePath} none swap sw 0 0" /etc/fstab; then
+        if ! grep -q "${swapFilePath}" /etc/fstab; then
             echo "${swapFilePath} none swap sw 0 0" >> /etc/fstab
             echo "# Added swapfile to /etc/fstab"
         fi
@@ -137,9 +139,9 @@ if [ "$action" = "swap" ]; then
             echo "# Swapfile ${swapFilePath} is not active."
         fi
         # remove from fstab
-        if grep -q "${swapFilePath} none swap sw 0 0" /etc/fstab; then
+        if grep -q "${swapFilePath}" /etc/fstab; then
             echo "# Removing swapfile entry from /etc/fstab ..."
-            sed -i "\#${swapFilePath} none swap sw 0 0#d" /etc/fstab
+            sed -i "\#^${swapFilePath}#d" /etc/fstab
         fi
         # delete file
         if [ -f "${swapFilePath}" ]; then
@@ -174,10 +176,9 @@ if [ "$action" = "status" ]; then
 
     ##########################
     # CHECK SWAP STATUS
-    isSwapExternal=0
-    swapFilePath="/swapfile"
+    swapActive=0
     if swapon --show | grep -q "${swapFilePath}"; then
-        isSwapExternal=1
+        swapActive=1
     fi
 
     ##########################
@@ -915,7 +916,7 @@ if [ "$action" = "status" ]; then
     echo "combinedDataStorage='${combinedDataStorage}'"
     echo "bootFromStorage='${bootFromStorage}'"
     echo "bootFromSD='${bootFromSD}'"
-    echo "isSwapExternal='${isSwapExternal}'"
+    echo "swapActive='${swapActive}'"
 
     # save to cache when -inspect
     if [ ${userWantsInspect} -eq 1 ]; then
