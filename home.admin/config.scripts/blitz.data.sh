@@ -656,10 +656,10 @@ if [ "$action" = "status" ]; then
 
     # STORAGE
     if [ ${#storageDevice} -gt 0 ]; then
-        if [ ${storageSizeGB} -lt $((storageFullMinGB - 1)) ]; then
+        if [ ${storageSizeGB} -lt $(storageFullMinGB) ]; then
             storageWarning='only-pruned'
         fi
-        if [ ${storageSizeGB} -lt $((storagePrunedMinGB - 1)) ]; then
+        if [ ${storageSizeGB} -lt $(storagePrunedMinGB) ]; then
             storageWarning='too-small'
         fi
     fi
@@ -1575,6 +1575,7 @@ if [ "$action" = "setup" ]; then
             parted /dev/${actionDevice} --script mklabel msdos
             parted /dev/${actionDevice} --script mkpart primary fat32 1MiB 513MiB
             parted /dev/${actionDevice} --script mkpart primary ext4 541MB 100%
+            partprobe /dev/${actionDevice}
             wipefs -a /dev/${actionDevicePartitionBase}1 2>/dev/null
             mkfs.fat -F 32 /dev/${actionDevicePartitionBase}1
             wipefs -a /dev/${actionDevicePartitionBase}2 2>/dev/null
@@ -1632,6 +1633,7 @@ if [ "$action" = "setup" ]; then
         parted /dev/${actionDevice} --script mkpart primary fat32 1MiB 513MiB >> ${logFile}
         parted /dev/${actionDevice} --script mkpart primary ext4 541MB 65GB >> ${logFile}
         parted /dev/${actionDevice} --script mkpart primary ext4 65GB 100% >> ${logFile}
+        partprobe /dev/${actionDevice}
         echo "# .. formating" >> ${logFile}
         wipefs -a /dev/${actionDevicePartitionBase}1 2>/dev/null >> ${logFile}
         mkfs.fat -F 32 /dev/${actionDevicePartitionBase}1 >> ${logFile}
@@ -1657,6 +1659,7 @@ if [ "$action" = "setup" ]; then
         wipefs -a /dev/${actionDevice} >> ${logFile}
         parted /dev/${actionDevice} --script mklabel msdos >> ${logFile}
         parted /dev/${actionDevice} --script mkpart primary ext4 1MB 100% >> ${logFile}
+        partprobe /dev/${actionDevice}
         echo "# .. formating" >> ${logFile}
         wipefs -a /dev/${actionDevicePartitionBase}1 >> ${logFile}
         mkfs -t ext4  /dev/${actionDevicePartitionBase}1 >> ${logFile}
@@ -1678,6 +1681,7 @@ if [ "$action" = "setup" ]; then
         wipefs -a /dev/${actionDevice} 2>/dev/null
         parted /dev/${actionDevice} --script mklabel msdos
         parted /dev/${actionDevice} --script mkpart primary ext4 1MB 100%
+        partprobe /dev/${actionDevice}
         echo "# .. formating" >> ${logFile}
         wipefs -a /dev/${actionDevicePartitionBase}1 2>/dev/null
         mkfs -t ext4  /dev/${actionDevicePartitionBase}1
